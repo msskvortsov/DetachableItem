@@ -8,47 +8,64 @@ Window {
     height: 400
     title: qsTr("DetachableItemExample")
 
-    // Variable which will contain the Item you want to detach.
-    // It is helpful to have an item to not search for proper one in 'data' of the rootWindow
-    property var detachableItem
+    // Item you want to detach.
+    DetachableItem {
+        id: detachableItem
 
-    Component.onCompleted: {
-        // Dynamically creating the item we want to detach
-        // How to create components dynamically: https://doc.qt.io/qt-5/qtqml-javascript-dynamicobjectcreation.html
-        detachableItem = Qt.createQmlObject('import QtQuick 2.0; DetachableItem { x: 50; y: 50 }',
-                                            rootWindow,
-                                            "test")
-        // Dynamically create connection for our  detachable item
-        var connection = Qt.createQmlObject('import QtQuick 2.0; Connections { target: detachableItem
-                                            onAttachedChanged: detachableItem.attached ? pullItem() : wrap.pushItem(detachableItem) }',
-                                            rootWindow,
-                                            "test")
+        objectName: "DetachableItem"
+
+        x: 50
+        y: 50
+
+        // ractic on property change
+        onAttachedChanged: {
+            if (attached) {     // state changed from detached to attached
+                // pushing item back to main window and closing auxillary window
+                pushItem(objectName, auxiliaryWindow, rootWindow)
+                auxiliaryWindow.close()
+            } else {            // state changed from attached to detached
+                // pushing item from main window to auxillary window
+                pushItem(objectName, rootWindow, auxiliaryWindow)
+                // adjusting auzillary window's geometry and showing it
+                auxiliaryWindow.setGeometry(x, y, width, height)
+                auxiliaryWindow.show()
+            }
+        }
     }
 
     // Window, which will pop up after you detach the item from rootWindow.
     Window {
-        id: wrap
+        id: auxiliaryWindow
 
         visible: false
         title: "WoooHooo! It is detached!"
+    }
 
-        property var detachableItem
-
-        // To make item a child of this window, you need to push it into 'data' property of the window,
-        // which is just a list of all children.
-        function pushItem(item) {
-            detachableItem = item
-            wrap.data.push(detachableItem)
-            // Adjust window's geometry to item's parameters
-            wrap.setGeometry(item.x, item.y, item.width, item.height)
-            wrap.visible = true
+    // Searches for object with objectName inside parent's property 'data'.
+    // If object found it is pushed to new parent's 'data' and becomes it's child
+    // @param objName name of object to search for.
+    // Every object has property 'objectName', but it is empty by default
+    // @param parent object where to seach
+    // @param newParent object to push child into
+    function pushItem(objName, parent, newParent) {
+        var index = indexOfObject(objName, parent)
+        if (index === -1) {
+            console.debug("Cound't find object with name \"" + objName + "\"")
+            return
+        } else {
+            newParent.data.push(parent.data[index])
         }
     }
 
-    // Pull item back to main window. Same way as pushing to detached window
-    function pullItem() {
-        detachableItem = wrap.detachableItem
-        data.push(detachableItem)
-        wrap.close()
+    // Searches for object with objectName inside parent's property 'data'
+    // @param objName object name to search for
+    // @param parant object where to search
+    // @return -1 if not found, index if found
+    function indexOfObject(objName, parent) {
+        for (var i = 0 ; i < parent.data.length; i++) {
+            if (parent.data[i].objectName === objName)
+                return i
+        }
+        return -1
     }
 }
