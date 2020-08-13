@@ -8,16 +8,13 @@ Item {
     height: 300
     visible: true
 
+    // Holds the state of the item: attached/detached
     property bool attached: true
-    property int previousX
-    property int previousY
-
+    // Holds coordinates of the item when it is attached
     property int attachedX
     property int attachedY
 
-    signal detach
-    signal attach
-
+    // Just top gray line
     Rectangle {
         id: topBar
 
@@ -29,9 +26,9 @@ Item {
             right: parent.right
         }
 
+        // Button which negates property 'attached' on click
         Button {
             id: detachButton
-            width: 20
             height: 20
 
             anchors {
@@ -40,12 +37,13 @@ Item {
                 margins: 5
             }
 
-            text: "D"
+            text: attached ? "Detach" : "Attach"
 
             onClicked: attached = !attached
         }
     }
 
+    // Just a body filler to see the item borders when it is attached
     Rectangle {
         id: bodyFiller
         anchors {
@@ -55,14 +53,16 @@ Item {
             top: topBar.bottom
         }
 
-        color: "red"
+        color: "green"
     }
 
+    // filling attached coordinates after item was created
     Component.onCompleted: {
         attachedX = root.x
         attachedY = root.y
     }
 
+    // adjusting position according to state
     onAttachedChanged: {
         if (attached) {
             root.x = attachedX

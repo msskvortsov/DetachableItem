@@ -1,6 +1,6 @@
 <RCC>
     <qresource prefix="/">
         <file>main.qml</file>
-        <file>WindowItem.qml</file>
+        <file>DetachableItem.qml</file>
     </qresource>
 </RCC>
